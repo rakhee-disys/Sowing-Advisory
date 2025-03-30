@@ -1,0 +1,20 @@
+# Ignore virtual environments
+venv/
+whisperx_env/
+backend/venv/
+
+# Ignore dependencies
+frontend/node_modules/
+frontend/package-lock.json
+
+# Ignore cached files
+__pycache__/
+*.pyc
+*.pyo
+*.db
+
+# Ignore logs and temporary files
+*.log
+temp_audio/
+
+.env

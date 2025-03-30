@@ -1,0 +1,24 @@
+# Backend
+fastapi
+uvicorn
+pydantic
+python-dotenv
+requests
+openai
+chromadb
+sentence-transformers
+torch
+whisperx
+ffmpeg-python
+numpy
+gtts
+uuid
+imageio[ffmpeg]
+
+# Frontend
+react
+react-dom
+vite
+axios
+lucide-react
+tailwindcss

@@ -30,6 +30,7 @@ export const TextChat = () => {
 
   // Reference to the chat container for scrolling
   const chatRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null); // Reference to the audio element
 
   // Example questions for quick access
   const exampleQuestions = [
@@ -93,17 +94,23 @@ export const TextChat = () => {
           message: plainResponse,
         });
         playAudio(ttsResponse.data.audio_url); // Play the generated audio
-        setIsTTSProcessing(false);
       }
     } catch (error) {
       console.error("Error fetching response:", error);
       setMessages((prev) => [...prev, { text: "⚠️ Error: Unable to get response.", isUser: false }]);
+    } finally {
+      setIsTTSProcessing(false);
     }
   };
 
   // Play audio from a given URL
   const playAudio = (url: string) => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = "";
+    }
     const audio = new Audio(url);
+    audioRef.current = audio;
     audio.play().catch((error) => {
       console.error("Error playing audio:", error);
       setMessages((prev) => [...prev, { text: "⚠️ Error: Unable to play audio.", isUser: false }]);
@@ -131,6 +138,9 @@ export const TextChat = () => {
 
   // Toggle the TTS feature
   const toggleTTS = () => {
+    if (isTTSEnabled && audioRef.current) {
+      audioRef.current.pause(); // Stop any ongoing TTS audio
+    }
     setIsTTSEnabled((prev) => !prev);
   };
 
@@ -160,7 +170,6 @@ export const TextChat = () => {
                   <li>Click the <Trash2 className="inline w-4 h-4" /> icon to clear the chat.</li>
                   <li>Click the <Volume2 className="inline w-4 h-4" /> icon to enable TTS (Text-to-Speech).</li>
                   <li>Click the <VolumeX className="inline w-4 h-4" /> icon to disable TTS.</li>
-                  <li>Use ⬇️ to scroll to the latest message.</li>
                 </ul>
               </div>
             )}

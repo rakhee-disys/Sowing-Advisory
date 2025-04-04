@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from fastapi import FastAPI, APIRouter, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -17,6 +19,7 @@ import imageio_ffmpeg as ffmpeg
 from omegaconf import ListConfig
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi import status
 
 # Mounting the static files directory for serving TTS audio files
 # This line is moved below the app initialization
@@ -26,12 +29,15 @@ torch.serialization.add_safe_globals([ListConfig])
 
 # Loading environment variables from the `.env` file
 def load_env():
-    dotenv_path = os.path.join(os.path.dirname(__file__), "env")
-    load_dotenv(dotenv_path=dotenv_path)
+    # Try .env file first, then fall back to Docker secrets
+    dotenv_path = os.path.join(os.path.dirname(__file__), ".env")
+    if os.path.exists(dotenv_path):
+        load_dotenv(dotenv_path=dotenv_path)
+    
     return {
         "AZURE_OPENAI_ENDPOINT": os.getenv("AZURE_OPENAI_ENDPOINT"),
         "AZURE_OPENAI_DEPLOYMENT": os.getenv("AZURE_OPENAI_DEPLOYMENT"),
-        "AZURE_OPENAI_API_KEY": os.getenv("AZURE_OPENAI_API_KEY"),
+        "AZURE_OPENAI_API_KEY": os.getenv("AZURE_OPENAI_API_KEY") or open("/run/secrets/azure_api_key").read().strip(),
         "AZURE_OPENAI_API_VERSION": os.getenv("AZURE_OPENAI_API_VERSION", "2024-05-01-preview")
     }
 
@@ -87,7 +93,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 stt_model = whisperx.load_model("small", device, compute_type="float32")
 
 # Creating a temporary directory for audio files
-TEMP_AUDIO_DIR = "temp_audio"
+TEMP_AUDIO_DIR = os.path.join(os.path.dirname(__file__), "temp_audio")
 os.makedirs(TEMP_AUDIO_DIR, exist_ok=True)
 
 # Defining a function to convert speech to text
@@ -126,7 +132,7 @@ def convert_speech_to_text(audio_file):
         raise HTTPException(status_code=500, detail=f"STT Processing Error: {str(e)}")
 
 # Creating a directory for TTS output files
-OUTPUT_DIR = "static/tts"
+OUTPUT_DIR = os.path.join(static_dir, "tts")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Defining a function to generate speech from text
@@ -151,10 +157,13 @@ def generate_speech(text: str):
         raise HTTPException(status_code=500, detail=f"TTS Error: {str(e)}")
 
 # Initializing the FastAPI application
-app = FastAPI()
+app = FastAPI(title="Sowing Advisory API", version="1.0.0")
 
 # Mounting the static files directory for serving TTS audio files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# Get absolute path for static files
+static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+os.makedirs(static_dir, exist_ok=True)
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # Adding CORS middleware to allow cross-origin requests
 app.add_middleware(
@@ -211,3 +220,7 @@ app.include_router(tts_router, prefix="/tts")
 @app.get("/")
 async def root():
     return {"message": "Sowing Advisory Backend is Running!"}
+
+@app.get("/healthcheck", status_code=status.HTTP_200_OK)
+async def healthcheck():
+    return {"status": "healthy"}

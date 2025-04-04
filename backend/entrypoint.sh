@@ -1,19 +1,22 @@
 #!/bin/bash
 set -e
 
+# Verify installations
+echo "Verifying Python packages..."
+python -c "
+import importlib
+for pkg in ['sentence_transformers', 'transformers', 'torch']:
+    try:
+        importlib.import_module(pkg)
+        print(f'Successfully imported {pkg}')
+    except ImportError as e:
+        print(f'Error importing {pkg}: {str(e)}')
+        exit(1)
+"
+
 # Load Azure credentials
 echo "Loading Azure credentials..."
 export AZURE_OPENAI_API_KEY=$(cat /run/secrets/azure_api_key | tr -d '\0')
-
-# Preload models with explicit cache directory
-echo "Preloading ML models..."
-python -c "
-import os
-from sentence_transformers import SentenceTransformer
-os.makedirs('/.cache', exist_ok=True)
-model = SentenceTransformer('BAAI/bge-small-en', cache_folder='/.cache')
-print('Model loaded successfully')
-"
 
 # Start Gunicorn
 exec gunicorn --bind 0.0.0.0:5000 \

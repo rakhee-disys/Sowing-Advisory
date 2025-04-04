@@ -1,0 +1,5 @@
+# Frontend-specific
+node_modules/
+dist/  # Except when you need to copy the built assets
+*.tmp
+*.bak

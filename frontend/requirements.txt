@@ -1,0 +1,7 @@
+# Frontend
+react
+react-dom
+vite
+axios
+lucide-react
+tailwindcss

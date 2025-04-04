@@ -1,0 +1,10 @@
+# General ignores (for both frontend/backend)
+.git
+.gitignore
+.dockerignore
+*.md
+*.log
+.DS_Store
+.env
+.vscode
+.idea

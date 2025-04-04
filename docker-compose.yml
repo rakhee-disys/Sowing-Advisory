@@ -1,0 +1,50 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend/static:/app/static
+      - ./backend/temp_audio:/app/temp_audio
+      - ./backend/COMBINE/chroma_db:/app/backend/COMBINE/chroma_db
+    environment:
+      - AZURE_OPENAI_ENDPOINT=https://dines-m7lp6cc0-japaneast.openai.azure.com/
+      - AZURE_OPENAI_API_VERSION=2024-02-15  # Check Azure portal for latest
+      - AZURE_OPENAI_DEPLOYMENT_NAME=cutn2-gpt4o
+      # - FLASK_APP=main.py
+      #- AZURE_OPENAI_API_KEY_FILE=/run/secrets/azure_api_key
+      - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+      - SB_DISABLE_QUIRKS=disable_jit_profiling,allow_tf32  # Pre-set quirks
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 10G
+
+
+    secrets:
+      - source: azure_api_key
+        target: azure_api_key
+        mode: 0400
+    
+      
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
+      interval: 60s
+      timeout: 60s
+      retries: 3
+      start_period: 300s
+
+  frontend:
+    build: ./frontend
+    ports:
+    - "3000:80"  # Production
+    - "5173:5173" # Add this for dev access via Docker
+    depends_on:
+      backend:
+        condition: service_healthy
+
+secrets:
+  azure_api_key:
+    file: ./secrets/azure_api_key.txt

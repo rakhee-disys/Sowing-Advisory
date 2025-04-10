@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+import sys
+from huggingface_hub import hf_hub_download
+sys.modules['huggingface_hub.cached_download'] = hf_hub_download
 
 from fastapi import FastAPI, APIRouter, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware

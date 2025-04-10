@@ -19,8 +19,9 @@ RUN pip install --no-cache-dir \
     torchvision==0.14.1+cpu \
     torchaudio==0.13.1+cpu \
     --extra-index-url https://download.pytorch.org/whl/cpu && \
+    pip install --no-cache-dir huggingface-hub==0.23.0 && \
     pip install --no-cache-dir -r requirements.txt
-    
+
 # Then install other requirements
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt gunicorn==20.1.0

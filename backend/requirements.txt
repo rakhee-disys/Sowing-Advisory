@@ -1,18 +1,21 @@
+# Core packages
+sentence-transformers==2.2.2
+huggingface-hub==0.23.0  # Minimum version that works with docling
+transformers==4.26.1
+docling==2.29.0
+
+# Other packages
 fastapi
 uvicorn
 whisperx
-# Excluded torchaudio - will be installed separately
-transformers==4.26.1
-sentence-transformers==2.2.2
-huggingface-hub==0.19.4 
+torchaudio==0.13.1
 python-multipart
-ffmpeg-python
-pydub
+ffmpeg-python 
+pydub 
 gtts
-requests
-python-dotenv
+requests  
+python-dotenv 
 openai
-docling
 flask
 imageio[ffmpeg]
 pydantic

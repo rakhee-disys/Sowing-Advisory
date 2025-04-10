@@ -1,3 +1,4 @@
+
 services:
   backend:
     build: ./backend
@@ -15,6 +16,8 @@ services:
       #- AZURE_OPENAI_API_KEY_FILE=/run/secrets/azure_api_key
       - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
       - SB_DISABLE_QUIRKS=disable_jit_profiling,allow_tf32  # Pre-set quirks
+      - TRANSFORMERS_CACHE=/.cache
+      - HF_HOME=/.cache
     deploy:
       resources:
         limits:
@@ -24,17 +27,16 @@ services:
 
     secrets:
       - source: azure_api_key
-        target: azure_api_key
-        mode: 0400
+        target: /run/secrets/azure_api_key
     
       
 
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
-      interval: 60s
-      timeout: 60s
+      interval: 30s
+      timeout: 10s
       retries: 3
-      start_period: 300s
+      start_period: 60s
 
   frontend:
     build: ./frontend

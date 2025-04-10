@@ -2,26 +2,30 @@
 FROM python:3.9-slim as builder
 
 WORKDIR /app
+COPY requirements.txt . 
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     gcc \
     python3-dev \
-    curl \
     && rm -rf /var/lib/apt/lists/*
 
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
+# First install specific torch/torchvision versions
+RUN pip install --no-cache-dir \
+    torch==1.13.1+cpu \
+    torchvision==0.14.1+cpu \
+    torchaudio==0.13.1+cpu \
+    --extra-index-url https://download.pytorch.org/whl/cpu && \
+    pip install --no-cache-dir -r requirements.txt gunicorn==20.1.0
+    
+# Then install other requirements
 COPY requirements.txt .
-# In the builder stage, replace the pip install line with:
-    RUN pip uninstall -y torch torchvision  # Remove any existing versions
-    RUN pip install --no-cache-dir \
-        torch==2.1.2+cpu \
-        torchvision==0.16.2+cpu \
-        --extra-index-url https://download.pytorch.org/whl/cpu && \
-        pip install --no-cache-dir -r requirements.txt gunicorn==20.1.0
-       # Stage 2: Runtime
+RUN pip install --no-cache-dir -r requirements.txt gunicorn==20.1.0
+
+# Stage 2: Runtime
 FROM python:3.9-slim
 
 WORKDIR /app
@@ -29,16 +33,19 @@ WORKDIR /app
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-RUN mkdir -p \
-    /.cache \
-    /app/static \
-    /app/temp_audio \
-    /app/COMBINE/chroma_db && \
-    chown -R 1000:1000 /app /.cache
+RUN mkdir -p /.cache && \
+    chown -R 1000:1000 /.cache && \
+    mkdir -p /app/COMBINE/chroma_db \
+    /app/static/tts \
+    /app/temp_audio && \
+    chown -R 1000:1000 /app
+
+ENV HF_HOME=/.cache \
+    XDG_CACHE_HOME=/.cache
 
 COPY --chown=1000:1000 . .
 
-# Entrypoint with secret handling
+RUN chmod +x entrypoint.sh
 USER 1000
 
 EXPOSE 5000

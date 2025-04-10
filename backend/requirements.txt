@@ -1,21 +1,23 @@
-# Core packages
+# Core packages with verified compatibility
+torch==2.1.2+cpu
+torchvision==0.16.2+cpu
+torchaudio==2.1.2+cpu
+transformers==4.30.2
 sentence-transformers==2.2.2
-huggingface-hub==0.23.0  # Minimum version that works with docling
-transformers==4.26.1
-docling==2.29.0
+huggingface-hub==0.23.0  # Middle ground that satisfies all
+whisperx==3.1.1
 
 # Other packages
 fastapi
 uvicorn
-whisperx
-torchaudio==0.13.1
 python-multipart
 ffmpeg-python 
 pydub 
 gtts
-requests  
+requests>=2.31.0
 python-dotenv 
 openai
+docling==2.29.0
 flask
 imageio[ffmpeg]
 pydantic

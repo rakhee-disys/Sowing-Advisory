@@ -15,9 +15,9 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 # First install specific torch/torchvision versions
 RUN pip install --no-cache-dir \
-    torch==1.13.1+cpu \
-    torchvision==0.14.1+cpu \
-    torchaudio==0.13.1+cpu \
+    torch==2.1.2+cpu \
+    torchvision==0.16.2+cpu \
+    torchaudio==2.1.2+cpu \
     --extra-index-url https://download.pytorch.org/whl/cpu && \
     pip install --no-cache-dir huggingface-hub==0.23.0 && \
     pip install --no-cache-dir -r requirements.txt

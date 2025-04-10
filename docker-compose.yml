@@ -1,52 +1,81 @@
+version: '3.8'
 
 services:
   backend:
-    build: ./backend
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
     ports:
       - "5000:5000"
     volumes:
       - ./backend/static:/app/static
       - ./backend/temp_audio:/app/temp_audio
-      - ./backend/COMBINE/chroma_db:/app/backend/COMBINE/chroma_db
+      - chroma_data:/app/backend/COMBINE/chroma_db
+      - cache_volume:/.cache
     environment:
-      - AZURE_OPENAI_ENDPOINT=https://dines-m7lp6cc0-japaneast.openai.azure.com/
-      - AZURE_OPENAI_API_VERSION=2024-02-15  # Check Azure portal for latest
-      - AZURE_OPENAI_DEPLOYMENT_NAME=cutn2-gpt4o
-      # - FLASK_APP=main.py
-      #- AZURE_OPENAI_API_KEY_FILE=/run/secrets/azure_api_key
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION:-2024-05-01-preview}
+      - AZURE_OPENAI_DEPLOYMENT_NAME=${AZURE_OPENAI_DEPLOYMENT_NAME}
       - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-      - SB_DISABLE_QUIRKS=disable_jit_profiling,allow_tf32  # Pre-set quirks
+      - SB_DISABLE_QUIRKS=disable_jit_profiling,allow_tf32
       - TRANSFORMERS_CACHE=/.cache
       - HF_HOME=/.cache
+      - MPLCONFIGDIR=/app/.config/matplotlib
+      - GUNICORN_WORKERS=${GUNICORN_WORKERS:-2}
+      - GUNICORN_TIMEOUT=${GUNICORN_TIMEOUT:-300}
     deploy:
       resources:
         limits:
           cpus: '4'
           memory: 10G
-
-
+        reservations:
+          memory: 8G
     secrets:
       - source: azure_api_key
         target: /run/secrets/azure_api_key
-    
-      
-
+        mode: 0440
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/healthcheck || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
+    restart: unless-stopped
+    networks:
+      - sowing-net
 
   frontend:
-    build: ./frontend
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
     ports:
-    - "3000:80"  # Production
-    - "5173:5173" # Add this for dev access via Docker
+      - "3000:80"
+      - "5173:5173"  # Dev port
     depends_on:
       backend:
         condition: service_healthy
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - sowing-net
+    restart: unless-stopped
+
+volumes:
+  chroma_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./backend/COMBINE/chroma_db
+  cache_volume:
+    driver: local
 
 secrets:
   azure_api_key:
     file: ./secrets/azure_api_key.txt
+
+networks:
+  sowing-net:
+    driver: bridge
+    attachable: true

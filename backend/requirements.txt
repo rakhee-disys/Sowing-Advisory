@@ -1,15 +1,16 @@
 fastapi
 uvicorn
 whisperx
-torchaudio==0.13.1
+# Excluded torchaudio - will be installed separately
 transformers==4.26.1
 sentence-transformers==2.2.2
+huggingface-hub==0.19.4 
 python-multipart
-ffmpeg-python 
-pydub 
+ffmpeg-python
+pydub
 gtts
-requests  
-python-dotenv 
+requests
+python-dotenv
 openai
 docling
 flask
@@ -17,3 +18,5 @@ imageio[ffmpeg]
 pydantic
 numpy
 uuid
+gunicorn==20.1.0
+chromadb==0.4.15

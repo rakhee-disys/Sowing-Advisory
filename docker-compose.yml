@@ -14,15 +14,13 @@ services:
       - cache_volume:/.cache
     environment:
       - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
-      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION:-2024-05-01-preview}
+      - AZURE_OPENAI_API_KEY_FILE=/run/secrets/azure_api_key  # Using secret file
       - AZURE_OPENAI_DEPLOYMENT_NAME=${AZURE_OPENAI_DEPLOYMENT_NAME}
-      - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-      - SB_DISABLE_QUIRKS=disable_jit_profiling,allow_tf32
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION:-2024-05-01-preview}
       - TRANSFORMERS_CACHE=/.cache
       - HF_HOME=/.cache
-      - MPLCONFIGDIR=/app/.config/matplotlib
-      - GUNICORN_WORKERS=${GUNICORN_WORKERS:-2}
-      - GUNICORN_TIMEOUT=${GUNICORN_TIMEOUT:-300}
+      - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+      
     deploy:
       resources:
         limits:

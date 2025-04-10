@@ -51,37 +51,29 @@ app.add_middleware(
 )
 
 # Environment variables configuration
-def load_env() -> Dict[str, Optional[str]]:
-    """Load environment variables from .env file or Docker secrets."""
+def load_env():
     env_vars = {
-        "AZURE_OPENAI_ENDPOINT": None,
-        "AZURE_OPENAI_DEPLOYMENT": None,
-        "AZURE_OPENAI_API_KEY": None,
-        "AZURE_OPENAI_API_VERSION": "2024-05-01-preview"
+        "AZURE_OPENAI_ENDPOINT": os.getenv("AZURE_OPENAI_ENDPOINT"),
+        "AZURE_OPENAI_DEPLOYMENT": os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"),
+        "AZURE_OPENAI_API_VERSION": os.getenv("AZURE_OPENAI_API_VERSION", "2024-05-01-preview")
     }
-    
-    # Try .env file first
-    dotenv_path = os.path.join(os.path.dirname(__file__), ".env")
-    if os.path.exists(dotenv_path):
-        load_dotenv(dotenv_path=dotenv_path)
-    
-    # Update from environment or .env file
-    for key in env_vars:
-        env_vars[key] = os.getenv(key, env_vars[key])
-    
-    # Try Docker secrets if API key not found
-    if not env_vars["AZURE_OPENAI_API_KEY"] and os.path.exists("/run/secrets/azure_api_key"):
-        try:
-            with open("/run/secrets/azure_api_key") as f:
-                env_vars["AZURE_OPENAI_API_KEY"] = f.read().strip()
-        except Exception as e:
-            print(f"Failed to read API key from secrets: {str(e)}")
-    
+
+    # Try to read API key from Docker secret first
+    secret_path = os.getenv("AZURE_OPENAI_API_KEY_FILE", "/run/secrets/azure_api_key")
+    if os.path.exists(secret_path):
+        with open(secret_path) as f:
+            env_vars["AZURE_OPENAI_API_KEY"] = f.read().strip()
+    else:
+        env_vars["AZURE_OPENAI_API_KEY"] = os.getenv("AZURE_OPENAI_API_KEY")
+
     # Validate required variables
-    if not all(env_vars[k] for k in ["AZURE_OPENAI_ENDPOINT", "AZURE_OPENAI_DEPLOYMENT", "AZURE_OPENAI_API_KEY"]):
-        raise ValueError("Missing required environment variables")
+    required = ["AZURE_OPENAI_ENDPOINT", "AZURE_OPENAI_DEPLOYMENT", "AZURE_OPENAI_API_KEY"]
+    if not all(env_vars[k] for k in required):
+        missing = [k for k in required if not env_vars[k]]
+        raise ValueError(f"Missing required environment variables: {', '.join(missing)}")
     
     return env_vars
+    
 
 # Load environment variables
 env_vars = load_env()

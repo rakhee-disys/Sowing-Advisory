@@ -14,23 +14,20 @@ services:
       - cache_volume:/.cache
     environment:
       - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
-      - AZURE_OPENAI_API_KEY_FILE=/run/secrets/azure_api_key  # Using secret file
+      - AZURE_OPENAI_API_KEY_FILE=/run/secrets/azure_api_key
       - AZURE_OPENAI_DEPLOYMENT_NAME=${AZURE_OPENAI_DEPLOYMENT_NAME}
       - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION:-2024-05-01-preview}
       - TRANSFORMERS_CACHE=/.cache
       - HF_HOME=/.cache
       - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-      
-      
+      - WHISPER_MODEL=tiny  
     deploy:
       resources:
         limits:
-          cpus: '4'
-          memory: 10G
+          cpus: '2'  
+          memory: 6G  
         reservations:
-          memory: 8G
-    environment:
-      WHISPER_MODEL: "tiny" 
+          memory: 4G  
     secrets:
       - source: azure_api_key
         target: /run/secrets/azure_api_key

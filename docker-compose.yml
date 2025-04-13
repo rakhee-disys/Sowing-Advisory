@@ -21,6 +21,7 @@ services:
       - HF_HOME=/.cache
       - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
       
+      
     deploy:
       resources:
         limits:
@@ -28,6 +29,8 @@ services:
           memory: 10G
         reservations:
           memory: 8G
+    environment:
+      WHISPER_MODEL: "tiny" 
     secrets:
       - source: azure_api_key
         target: /run/secrets/azure_api_key

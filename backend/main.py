@@ -73,7 +73,6 @@ def load_env():
         raise ValueError(f"Missing required environment variables: {', '.join(missing)}")
     
     return env_vars
-    
 
 # Load environment variables
 env_vars = load_env()
@@ -83,7 +82,8 @@ print("Environment variables loaded successfully")
 client = AzureOpenAI(
     api_key=env_vars["AZURE_OPENAI_API_KEY"],
     api_version=env_vars["AZURE_OPENAI_API_VERSION"],
-    azure_endpoint=env_vars["AZURE_OPENAI_ENDPOINT"]
+    azure_endpoint=env_vars["AZURE_OPENAI_ENDPOINT"],
+    # Remove proxies parameter if not needed
 )
 
 # Initialize ChromaDB
